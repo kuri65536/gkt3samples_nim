@@ -49,14 +49,16 @@ proc g_signal_connect(app: GtkApplicationPtr, signal: cstring,
 proc gtk_application_window_new(app: GtkApplicationPtr
                                 ): GtkWidgetPtr {.importc.}
 
+proc gtk_widget_show_all(src: GtkWidgetPtr): void {.importc.}
+
 
 proc activate(app: GtkApplicationPtr, user_data: gpointer): void {.cdecl.} =
     let window = gtk_application_window_new(app)
 #[
   gtk_window_set_title (GTK_WINDOW (window), "Window");
   gtk_window_set_default_size (GTK_WINDOW (window), 200, 200);
-  gtk_widget_show_all (window);
 ]#
+    gtk_widget_show_all(window)
 
 
 proc main(argc: int, argv: openarray[cstring]): int =
