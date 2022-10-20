@@ -22,6 +22,9 @@ type
   GtkApplication = object
   GtkApplicationPtr = ptr GtkApplication
 
+  GtkWidget = object
+  GtkWidgetPtr = ptr GtkWidget
+
   GApplicationFlags {.size: sizeof(cint), pure.} = enum
     G_APPLICATION_FLAGS_NONE = 0
 
@@ -34,13 +37,13 @@ proc g_object_unref(app: GtkApplicationPtr): void {.importc.}
 proc g_application_run(app: GtkApplicationPtr,
                        argc: int, argv: openarray[cstring]): int {.importc.}
 
+proc gtk_application_window_new(app: GtkApplicationPtr
+                                ): GtkWidgetPtr {.importc.}
+
 
 proc activate(app: GtkApplicationPtr, user_data: gpointer): void {.cdecl.} =
-    discard
+    let window = gtk_application_window_new(app)
 #[
-  GtkWidget *window;
-
-  window = gtk_application_window_new (app);
   gtk_window_set_title (GTK_WINDOW (window), "Window");
   gtk_window_set_default_size (GTK_WINDOW (window), 200, 200);
   gtk_widget_show_all (window);
