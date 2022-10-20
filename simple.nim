@@ -12,6 +12,8 @@ License (MPL2)::
   v.2.0. If a copy of the MPL was not distributed with this file,
   You can obtain one at https://mozilla.org/MPL/2.0/.
 ]##
+import os
+
 {.passC: gorge("pkg-config --cflags gtk+-3.0").}
 {.passL: gorge("pkg-config --libs gtk+-3.0").}
 
@@ -70,5 +72,9 @@ proc main(argc: int, argv: openarray[cstring]): int =
 
 
 when isMainModule:
-    discard main(0, [])
+    let argc = os.paramCount()
+    var argv: seq[cstring]
+    for i in 1..argc:
+        argv.add(os.paramStr(i))
+    discard main(argc, argv)
 
