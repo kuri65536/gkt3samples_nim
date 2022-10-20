@@ -28,6 +28,9 @@ type
   GApplicationFlags {.size: sizeof(cint), pure.} = enum
     G_APPLICATION_FLAGS_NONE = 0
 
+  callback_app = proc(app: GtkApplicationPtr, user_data: gpointer
+                      ): void {.cdecl.}
+
 
 proc gtk_application_new(class_string: cstring, flags: GApplicationFlags
                          ): GtkApplicationPtr {.importc: "gtk_application_new".}
@@ -36,6 +39,12 @@ proc g_object_unref(app: GtkApplicationPtr): void {.importc.}
 
 proc g_application_run(app: GtkApplicationPtr,
                        argc: int, argv: openarray[cstring]): int {.importc.}
+
+proc g_signal_connect(app: GtkApplicationPtr, signal: cstring,
+                      fn: callback_app, data: gpointer,
+                      closure_notify: gpointer = nil, flags: int = 0
+                      ): void {.importc: "g_signal_connect_data".}
+
 
 proc gtk_application_window_new(app: GtkApplicationPtr
                                 ): GtkWidgetPtr {.importc.}
@@ -52,9 +61,7 @@ proc activate(app: GtkApplicationPtr, user_data: gpointer): void {.cdecl.} =
 
 proc main(argc: int, argv: openarray[cstring]): int =
   var app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE)
-  #[
-  g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
-  ]#
+  g_signal_connect(app, "activate", activate, nil)
   let status = g_application_run(app, argc, argv)
   g_object_unref (app);
   return status;
