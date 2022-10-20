@@ -17,6 +17,8 @@ License (MPL2)::
 
 
 type
+  gpointer = pointer
+
   GtkApplication = object
   GtkApplicationPtr = ptr GtkApplication
 
@@ -32,12 +34,10 @@ proc g_object_unref(app: GtkApplicationPtr): void {.importc.}
 proc g_application_run(app: GtkApplicationPtr,
                        argc: int, argv: openarray[cstring]): int {.importc.}
 
-#[
 
-static void
-activate (GtkApplication* app,
-          gpointer        user_data)
-{
+proc activate(app: GtkApplicationPtr, user_data: gpointer): void {.cdecl.} =
+    discard
+#[
   GtkWidget *window;
 
   window = gtk_application_window_new (app);
