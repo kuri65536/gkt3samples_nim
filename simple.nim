@@ -1,4 +1,20 @@
-#include <gtk/gtk.h>
+##[
+simple.c
+==============
+a straight conversion for gtk+-3.0 sample.
+
+
+License (MPL2)::
+  Copyright (c) 2022, shimoda as kuri65536 _dot_ hot mail _dot_ com
+                        ( email address: convert _dot_ to . and joint string )
+
+  This Source Code Form is subject to the terms of the Mozilla Public License,
+  v.2.0. If a copy of the MPL was not distributed with this file,
+  You can obtain one at https://mozilla.org/MPL/2.0/.
+]##
+{.passC: gorge("pkg-config --cflags gtk+-3.0").}
+{.passL: gorge("pkg-config --libs gtk+-3.0").}
+#[
 
 static void
 activate (GtkApplication* app,
@@ -10,12 +26,11 @@ activate (GtkApplication* app,
   gtk_window_set_title (GTK_WINDOW (window), "Window");
   gtk_window_set_default_size (GTK_WINDOW (window), 200, 200);
   gtk_widget_show_all (window);
-}
+]#
 
-int
-main (int    argc,
-      char **argv)
-{
+
+proc main(argc: int, argv: openarray[cstring]): int =
+  #[
   GtkApplication *app;
   int status;
 
@@ -23,8 +38,11 @@ main (int    argc,
   g_signal_connect (app, "activate", G_CALLBACK (activate), NULL);
   status = g_application_run (G_APPLICATION (app), argc, argv);
   g_object_unref (app);
-
+  ]#
+  let status = 0
   return status;
-}
 
+
+when isMainModule:
+    discard main(0, [])
 
