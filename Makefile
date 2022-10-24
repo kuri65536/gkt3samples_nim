@@ -1,3 +1,7 @@
+bin/timer: timer.nim
+	nim c -o:$@ $<
+
+
 bin/simple: simple.nim
 	nim c -o:$@ $<
 
