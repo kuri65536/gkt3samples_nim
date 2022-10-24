@@ -1,3 +1,7 @@
+bin/draw_image: draw_image.nim
+	nim c -o:$@ $<
+
+
 bin/timer: timer.nim
 	nim c -o:$@ $<
 
