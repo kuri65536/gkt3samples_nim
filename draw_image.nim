@@ -38,6 +38,9 @@ proc gdk_pixbuf_new_from_data*(src: openarray[byte],
                                ): GdkPixbufPtr {.
                                   importc: "gdk_pixbuf_new_from_data".}
 proc gdk_pixbuf_unref*(src: GdkPixbufPtr): void {.importc: "gdk_pixbuf_unref".}
+proc gdk_pixbuf_get_from_window(wnd: GtkWidgetPtr, x, y, width, height: int
+                                ): GdkPixbufPtr {.
+                                  importc: "gdk_pixbuf_get_from_window".}
 
 
 when isMainModule:
@@ -46,6 +49,7 @@ when isMainModule:
   app_data_obj = object of RootObj
     n_buf: int
     bufs: array[2, seq[byte]]
+    pixbuf: GdkPixbufPtr
 
 
  proc cb_timer(user_data: gpointer): bool {.cdecl.} =
@@ -64,10 +68,12 @@ when isMainModule:
     gtk_window_set_title(window, "Window")
     gtk_window_set_default_size(window, 200, 200)
     gtk_widget_show_all(window)
+
     var data = cast[app_data](user_data)
     data.n_buf = 0
     data.bufs[0] = newSeq[byte](200 * 200 * 3)
     data.bufs[1] = newSeq[byte](200 * 200 * 3)
+    data.pixbuf = gdk_pixbuf_get_from_window(window, 0, 0, 200, 200)
 
 
  proc main(argc: int, argv: openarray[cstring]): int =
