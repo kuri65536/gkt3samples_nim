@@ -70,6 +70,7 @@ when isMainModule:
     gtk_widget_show_all(window)
     let wnd: GdkWindowPtr = nil
 
+    let wnd = gtk_widget_get_window(window)
     var data = cast[app_data](user_data)
     data.n_buf = 0
     data.bufs[0] = newSeq[byte](200 * 200 * 3)

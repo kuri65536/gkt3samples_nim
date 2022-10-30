@@ -28,6 +28,8 @@ type
   GApplicationFlags* {.size: sizeof(cint), pure.} = enum
     G_APPLICATION_FLAGS_NONE = 0
 
+  gcallback* = proc(self: gpointer, user_data: gpointer
+                    ): void {.cdecl.}
   callback_app* = proc(app: GtkApplicationPtr, user_data: gpointer
                       ): void {.cdecl.}
 
@@ -51,6 +53,9 @@ proc gtk_application_window_new*(app: GtkApplicationPtr
 
 proc gtk_window_set_title*(src: GtkWidgetPtr, title: cstring): void {.importc.}
 proc gtk_window_set_default_size*(src: GtkWidgetPtr, x, y: int): void {.importc.}
+
+proc gtk_widget_get_window*(src: GtkWidgetPtr): GdkWindowPtr {.
+                            importc: "gtk_widget_get_window".}
 proc gtk_widget_show_all*(src: GtkWidgetPtr): void {.importc.}
 
 
