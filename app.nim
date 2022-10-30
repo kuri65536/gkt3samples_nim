@@ -71,6 +71,8 @@ proc gtk_window_set_default_size*(src: GtkWidgetPtr, x, y: int): void {.importc.
 proc gtk_widget_get_window*(src: GtkWidgetPtr): GdkWindowPtr {.
                             importc: "gtk_widget_get_window".}
 proc gtk_widget_show_all*(src: GtkWidgetPtr): void {.importc.}
+proc gtk_widget_queue_draw*(src: GtkWidgetPtr): void {.
+                            importc: "gtk_widget_queue_draw".}
 
 
 when isMainModule:

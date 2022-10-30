@@ -47,6 +47,7 @@ when isMainModule:
     f_update: bool
     bufs: array[2, seq[byte]]
     pixbuf: GdkPixbufPtr
+    wgt: GtkWidgetPtr
 
 
  proc cb_timer(user_data: gpointer): gboolean {.cdecl.} =
@@ -55,6 +56,10 @@ when isMainModule:
         return gtrue
 
     data.n_buf += 1
+    if isNil(data.wgt):
+        echo("count...widget is null...")
+        return gtrue
+    gtk_widget_queue_draw(data.wgt)
     return gtrue
 
 
@@ -86,6 +91,7 @@ when isMainModule:
     let data = cast[app_data](user_data)
     data.f_update = false
     data.n_buf = 0
+    data.wgt = window
     data.bufs[0] = newSeq[byte](200 * 200 * 3)
     data.bufs[1] = newSeq[byte](200 * 200 * 3)
     data.pixbuf = gdk_pixbuf_get_from_window(wnd, 0, 0, 200, 200)
