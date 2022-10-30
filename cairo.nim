@@ -12,6 +12,7 @@ License (MPL2)::
   v.2.0. If a copy of the MPL was not distributed with this file,
   You can obtain one at https://mozilla.org/MPL/2.0/.
 ]##
+import pixbuf
 import window
 
 
@@ -25,6 +26,11 @@ when defined(build_unused):
 
   proc cairo_destroy*(src: cairo_t): void {.importc: "cairo_fill".}
   proc cairo_fill*(src: cairo_t): void {.importc: "cairo_fill".}
+
+
+proc gdk_cairo_set_source_pixbuf*(cr: cairo_t, pixbuf: GdkPixbufPtr,
+                                  x, y: float): void {.
+                                  importc: "gdk_cairo_set_source_pixbuf".}
 
 
 when isMainModule:
