@@ -40,6 +40,8 @@ proc gdk_pixbuf_unref*(src: GdkPixbufPtr): void {.importc: "gdk_pixbuf_unref".}
 
 
 when isMainModule:
+ import random
+
  type
   app_data = ptr app_data_obj
   app_data_obj = object of RootObj
@@ -48,6 +50,11 @@ when isMainModule:
     bufs: array[2, seq[byte]]
     pixbuf: GdkPixbufPtr
     wgt: GtkWidgetPtr
+
+
+ proc render(buf: var seq[byte]): void =
+    for i in 0..len(buf) - 1:
+        buf[i] = byte(random.rand(255))
 
 
  proc cb_timer(user_data: gpointer): gboolean {.cdecl.} =
@@ -59,6 +66,9 @@ when isMainModule:
     if isNil(data.wgt):
         echo("count...widget is null...")
         return gtrue
+    echo("timer..." & $data.n_buf & "=>" & $data.f_update)
+
+    data.f_update = true
     gtk_widget_queue_draw(data.wgt)
     return gtrue
 
@@ -71,13 +81,17 @@ when isMainModule:
     if not data.f_update:
         return gfalse
 
-    let bytes = newGBytes(data.bufs[data.n_buf][0].addr, 100 * 100 * 3)
+    var src = newSeq[byte](100 * 100 * 3)
+    render(src)
+    let bytes = newGBytes(src[0].addr, 100 * 100 * 3)
 
     let buf = gdk_pixbuf_new_from_bytes(
               bytes, GDK_COLORSPACE_RGB, gfalse, 8,
               100, 100, 300)
     echo("count..." & $data.n_buf)
     gdk_pixbuf_unref(buf)
+    g_bytes_unref(bytes)
+    data.f_update = false
     return gtrue
 
 
