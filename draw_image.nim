@@ -15,7 +15,10 @@ License (MPL2)::
 import os
 
 import app
+import gtypes
+import pixbuf
 import timer
+import window
 
 {.passC: gorge("pkg-config --cflags gtk+-3.0").}
 {.passL: gorge("pkg-config --libs gtk+-3.0").}
@@ -23,24 +26,16 @@ import timer
 
 type
   gdk_colorspace_value* {.size: sizeof(cint), pure.} = enum
-    GDK_COLORSPACE_RGB
-
-  GdkPixbuf* = object of RootObj
-  GdkPixbufPtr* = ptr GdkPixbuf
+    GDK_COLORSPACE_RGB = 0
 
 
-proc gdk_pixbuf_new_from_data*(src: openarray[byte],
-                               colorspace: gdk_colorspace_value,
-                               has_alpha: bool,
-                               bits_per_sample, width, height, rowstride: int,
-                               fn_destroy: callback_destroy,
-                               fn_destroy_data: callback_destroy
-                               ): GdkPixbufPtr {.
-                                  importc: "gdk_pixbuf_new_from_data".}
-proc gdk_pixbuf_unref*(src: GdkPixbufPtr): void {.importc: "gdk_pixbuf_unref".}
-proc gdk_pixbuf_get_from_window(wnd: GtkWidgetPtr, x, y, width, height: int
+proc gdk_pixbuf_new_from_bytes*(src: GBytes,
+                                colorspace: gdk_colorspace_value,
+                                has_alpha: gboolean,
+                                bits_per_sample, width, height, rowstride: cint,
                                 ): GdkPixbufPtr {.
-                                  importc: "gdk_pixbuf_get_from_window".}
+                                  importc: "gdk_pixbuf_new_from_bytes".}
+proc gdk_pixbuf_unref*(src: GdkPixbufPtr): void {.importc: "gdk_pixbuf_unref".}
 
 
 when isMainModule:
@@ -52,15 +47,20 @@ when isMainModule:
     pixbuf: GdkPixbufPtr
 
 
- proc cb_timer(user_data: gpointer): bool {.cdecl.} =
-    var data = cast[app_data](user_data)
+ proc cb_timer(user_data: gpointer): gboolean {.cdecl.} =
+    let data = cast[app_data](user_data)
+    if isNil(data):
+        return gtrue
 
-    let buf = gdk_pixbuf_new_from_data(
-              data.bufs[data.n_buf], GDK_COLORSPACE_RGB, false, 8,
-              200, 200, 0, nil, nil)
+
+    let bytes = newGBytes(data.bufs[data.n_buf][0].addr, 100 * 100 * 3)
+
+    let buf = gdk_pixbuf_new_from_bytes(
+              bytes, GDK_COLORSPACE_RGB, gfalse, 8,
+              100, 100, 300)
     echo("count..." & $data.n_buf)
     gdk_pixbuf_unref(buf)
-    return true
+    return gtrue
 
 
  proc activate(app: GtkApplicationPtr, user_data: gpointer): void {.cdecl.} =
@@ -68,12 +68,13 @@ when isMainModule:
     gtk_window_set_title(window, "Window")
     gtk_window_set_default_size(window, 200, 200)
     gtk_widget_show_all(window)
+    let wnd: GdkWindowPtr = nil
 
     var data = cast[app_data](user_data)
     data.n_buf = 0
     data.bufs[0] = newSeq[byte](200 * 200 * 3)
     data.bufs[1] = newSeq[byte](200 * 200 * 3)
-    data.pixbuf = gdk_pixbuf_get_from_window(window, 0, 0, 200, 200)
+    data.pixbuf = gdk_pixbuf_get_from_window(wnd, 0, 0, 200, 200)
 
 
  proc main(argc: int, argv: openarray[cstring]): int =

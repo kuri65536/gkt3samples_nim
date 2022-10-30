@@ -12,6 +12,7 @@ License (MPL2)::
   You can obtain one at https://mozilla.org/MPL/2.0/.
 ]##
 import app
+import gtypes
 
 {.passC: gorge("pkg-config --cflags gtk+-3.0").}
 {.passL: gorge("pkg-config --libs gtk+-3.0").}
@@ -21,7 +22,7 @@ type
   g_priority_value* {.size: sizeof(int), pure.} = enum
     G_PRIORITY_DEFAULT = 0
 
-  callback_timer* = proc(user_data: gpointer): bool {.cdecl.}
+  callback_timer* = proc(user_data: gpointer): gboolean {.cdecl.}
   callback_destroy* = proc(user_data: gpointer): void {.cdecl.}
 
 
