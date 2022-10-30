@@ -15,6 +15,7 @@ License (MPL2)::
 import os
 
 import app
+import cairo
 import gtypes
 import pixbuf
 import timer
@@ -43,6 +44,7 @@ when isMainModule:
   app_data = ptr app_data_obj
   app_data_obj = object of RootObj
     n_buf: int
+    f_update: bool
     bufs: array[2, seq[byte]]
     pixbuf: GdkPixbufPtr
 
@@ -52,6 +54,17 @@ when isMainModule:
     if isNil(data):
         return gtrue
 
+    data.n_buf += 1
+    return gtrue
+
+
+ proc cb_draw(wnd: GtkWidgetPtr, context: cairo_t, user_data: gpointer
+              ): gboolean {.cdecl.} =
+    let data = cast[app_data](user_data)
+    if isNil(data):
+        return gfalse
+    if not data.f_update:
+        return gfalse
 
     let bytes = newGBytes(data.bufs[data.n_buf][0].addr, 100 * 100 * 3)
 
@@ -68,14 +81,15 @@ when isMainModule:
     gtk_window_set_title(window, "Window")
     gtk_window_set_default_size(window, 200, 200)
     gtk_widget_show_all(window)
-    let wnd: GdkWindowPtr = nil
 
     let wnd = gtk_widget_get_window(window)
-    var data = cast[app_data](user_data)
+    let data = cast[app_data](user_data)
+    data.f_update = false
     data.n_buf = 0
     data.bufs[0] = newSeq[byte](200 * 200 * 3)
     data.bufs[1] = newSeq[byte](200 * 200 * 3)
     data.pixbuf = gdk_pixbuf_get_from_window(wnd, 0, 0, 200, 200)
+    g_signal_connect2(window, "draw", cb_draw, user_data)
 
 
  proc main(argc: int, argv: openarray[cstring]): int =

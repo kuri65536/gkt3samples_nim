@@ -15,6 +15,10 @@ License (MPL2)::
 {.passC: gorge("pkg-config --cflags gtk+-3.0").}
 {.passL: gorge("pkg-config --libs gtk+-3.0").}
 
+import cairo
+import gtypes
+import window
+
 
 type
   gpointer* = pointer
@@ -33,6 +37,9 @@ type
   callback_app* = proc(app: GtkApplicationPtr, user_data: gpointer
                       ): void {.cdecl.}
 
+  callback_draw* = proc(app: GtkWidgetPtr, context: cairo_t,
+                        user_data: gpointer): gboolean {.cdecl.}
+
 
 proc gtk_application_new*(class_string: cstring, flags: GApplicationFlags
                          ): GtkApplicationPtr {.importc: "gtk_application_new".}
@@ -46,6 +53,13 @@ proc g_signal_connect*(app: GtkApplicationPtr, signal: cstring,
                       fn: callback_app, data: gpointer,
                       closure_notify: gpointer = nil, flags: int = 0
                       ): void {.importc: "g_signal_connect_data".}
+
+
+proc g_signal_connect2*(wgt: GtkWidgetPtr, signal: cstring,
+                        fn: callback_draw, data: gpointer,
+                        closure_notify: gpointer = nil, flags: int = 0
+                        ): void =
+    {.emit: "g_signal_connect_data(`wgt`, `signal`, `fn`, `data`, `closure_notify`, `flags`);".}
 
 
 proc gtk_application_window_new*(app: GtkApplicationPtr
