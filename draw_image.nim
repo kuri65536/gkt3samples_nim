@@ -47,7 +47,7 @@ when isMainModule:
   app_data_obj = object of RootObj
     n_buf: int
     f_update: bool
-    bufs: array[2, seq[byte]]
+    bufs: array[2, GBytes]
     pixbuf: GdkPixbufPtr
     wgt: GtkWidgetPtr
 
@@ -68,6 +68,14 @@ when isMainModule:
         return gtrue
     echo("timer..." & $data.n_buf & "=>" & $data.f_update)
 
+    let idx = data.n_buf and 1
+    g_bytes_unref(data.bufs[idx])
+
+    var src = newSeq[byte](100 * 100 * 3)
+    render(src)
+    let bytes = newGBytes(src[0].addr, 100 * 100 * 3)
+    data.bufs[idx] = bytes
+
     data.f_update = true
     gtk_widget_queue_draw(data.wgt)
     return gtrue
@@ -81,19 +89,15 @@ when isMainModule:
     if not data.f_update:
         return gfalse
 
-    var src = newSeq[byte](100 * 100 * 3)
-    render(src)
-    let bytes = newGBytes(src[0].addr, 100 * 100 * 3)
-
+    let idx = data.n_buf and 1
     let buf = gdk_pixbuf_new_from_bytes(
-              bytes, GDK_COLORSPACE_RGB, gfalse, 8,
+              data.bufs[idx], GDK_COLORSPACE_RGB, gfalse, 8,
               100, 100, 300)
     echo("count..." & $data.n_buf)
     gdk_cairo_set_source_pixbuf(context, buf, 0, 0)
     cairo_paint(context)
 
     gdk_pixbuf_unref(buf)
-    g_bytes_unref(bytes)
     data.f_update = false
     return gtrue
 
@@ -109,9 +113,12 @@ when isMainModule:
     data.f_update = false
     data.n_buf = 0
     data.wgt = window
-    data.bufs[0] = newSeq[byte](200 * 200 * 3)
-    data.bufs[1] = newSeq[byte](200 * 200 * 3)
-    data.pixbuf = gdk_pixbuf_get_from_window(wnd, 0, 0, 200, 200)
+
+    # make dummy data...
+    var src = newSeq[byte](1)
+    data.bufs[0] = newGBytes(src[0].addr, 1)
+    data.bufs[1] = newGBytes(src[0].addr, 1)
+
     g_signal_connect2(window, "draw", cb_draw, user_data)
 
 
