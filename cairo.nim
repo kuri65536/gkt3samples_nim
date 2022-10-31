@@ -28,6 +28,8 @@ when defined(build_unused):
   proc cairo_fill*(src: cairo_t): void {.importc: "cairo_fill".}
 
 
+proc cairo_paint*(src: cairo_t): void {.importc: "cairo_paint".}
+
 proc gdk_cairo_set_source_pixbuf*(cr: cairo_t, pixbuf: GdkPixbufPtr,
                                   x, y: float): void {.
                                   importc: "gdk_cairo_set_source_pixbuf".}

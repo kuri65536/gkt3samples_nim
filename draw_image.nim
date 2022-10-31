@@ -90,6 +90,8 @@ when isMainModule:
               100, 100, 300)
     echo("count..." & $data.n_buf)
     gdk_cairo_set_source_pixbuf(context, buf, 0, 0)
+    cairo_paint(context)
+
     gdk_pixbuf_unref(buf)
     g_bytes_unref(bytes)
     data.f_update = false
