@@ -40,6 +40,7 @@ proc gdk_pixbuf_unref*(src: GdkPixbufPtr): void {.importc: "gdk_pixbuf_unref".}
 
 
 when isMainModule:
+ import posix
  import random
 
  type
@@ -66,7 +67,9 @@ when isMainModule:
     if isNil(data.wgt):
         echo("count...widget is null...")
         return gtrue
-    echo("timer..." & $data.n_buf & "=>" & $data.f_update)
+    var cur: Timespec
+    discard clock_gettime(CLOCK_REALTIME, cur)
+    echo("timer..." & $int64(cur.tv_sec) & "=>" & $cur.tv_nsec)
 
     let idx = data.n_buf and 1
     g_bytes_unref(data.bufs[idx])
@@ -126,7 +129,7 @@ when isMainModule:
   var data = app_data_obj()
   var app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE)
   g_signal_connect(app, "activate", activate, addr(data))
-  g_timeout_add_full(G_PRIORITY_DEFAULT, 1000, cb_timer, addr(data), nil)
+  g_timeout_add_full(G_PRIORITY_DEFAULT, 16, cb_timer, addr(data), nil)
   let status = g_application_run(app, argc, argv)
   g_object_unref (app);
   return status;
