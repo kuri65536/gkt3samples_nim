@@ -18,7 +18,6 @@ import app
 import cairo
 import gtypes
 import pixbuf
-import timer
 import window
 
 {.passC: gorge("pkg-config --cflags gtk+-3.0").}
@@ -42,6 +41,7 @@ proc gdk_pixbuf_unref*(src: GdkPixbufPtr): void {.importc: "gdk_pixbuf_unref".}
 when isMainModule:
  import posix
  import random
+ import std/locks
 
  type
   app_data = ptr app_data_obj
@@ -52,24 +52,34 @@ when isMainModule:
     pixbuf: GdkPixbufPtr
     wgt: GtkWidgetPtr
 
+ var th: Thread[app_data]
+ var L: Lock
+
 
  proc render(buf: var seq[byte]): void =
     for i in 0..len(buf) - 1:
         buf[i] = byte(random.rand(255))
 
 
- proc cb_timer(user_data: gpointer): gboolean {.cdecl.} =
-    let data = cast[app_data](user_data)
-    if isNil(data):
-        return gtrue
-
-    data.n_buf += 1
+ proc cb_timer(data: app_data): void {.thread.} =
+   var
+      cur: Timespec
+   while true:
     if isNil(data.wgt):
         echo("count...widget is null...")
-        return gtrue
-    var cur: Timespec
+        os.sleep(500); continue
+    acquire(L)
+    let f = data.f_update
+    release(L)
+    if f:
+        continue
+
+    data.n_buf += 1
+    let (prev_n, prev) = (int64(cur.tv_sec), cur.tv_nsec)
     discard clock_gettime(CLOCK_REALTIME, cur)
-    echo("timer..." & $int64(cur.tv_sec) & "=>" & $cur.tv_nsec)
+    let span = (int64(cur.tv_sec) - prev_n) * 1000_000 +
+               (cur.tv_nsec - prev) div 1000
+    echo("timer..." & $prev_n & "=>" & $span)
 
     let idx = data.n_buf and 1
     g_bytes_unref(data.bufs[idx])
@@ -79,9 +89,10 @@ when isMainModule:
     let bytes = newGBytes(src[0].addr, 100 * 100 * 3)
     data.bufs[idx] = bytes
 
+    acquire(L)
     data.f_update = true
     gtk_widget_queue_draw(data.wgt)
-    return gtrue
+    release(L)
 
 
  proc cb_draw(wnd: GtkWidgetPtr, context: cairo_t, user_data: gpointer
@@ -89,19 +100,23 @@ when isMainModule:
     let data = cast[app_data](user_data)
     if isNil(data):
         return gfalse
-    if not data.f_update:
+    acquire(L)
+    let f = data.f_update
+    release(L)
+    if not f:
         return gfalse
 
     let idx = data.n_buf and 1
     let buf = gdk_pixbuf_new_from_bytes(
               data.bufs[idx], GDK_COLORSPACE_RGB, gfalse, 8,
               100, 100, 300)
-    echo("count..." & $data.n_buf)
     gdk_cairo_set_source_pixbuf(context, buf, 0, 0)
     cairo_paint(context)
 
     gdk_pixbuf_unref(buf)
+    acquire(L)
     data.f_update = false
+    release(L)
     return gtrue
 
 
@@ -122,6 +137,7 @@ when isMainModule:
     data.bufs[0] = newGBytes(src[0].addr, 1)
     data.bufs[1] = newGBytes(src[0].addr, 1)
 
+    initLock(L)
     g_signal_connect2(window, "draw", cb_draw, user_data)
 
 
@@ -129,7 +145,7 @@ when isMainModule:
   var data = app_data_obj()
   var app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE)
   g_signal_connect(app, "activate", activate, addr(data))
-  g_timeout_add_full(G_PRIORITY_DEFAULT, 16, cb_timer, addr(data), nil)
+  createThread(th, cb_timer, addr(data))
   let status = g_application_run(app, argc, argv)
   g_object_unref (app);
   return status;

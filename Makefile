@@ -1,5 +1,5 @@
 bin/draw_image: draw_image.nim
-	nim c -o:$@ $<
+	nim c -o:$@ --threads:on $<
 
 
 bin/timer: timer.nim

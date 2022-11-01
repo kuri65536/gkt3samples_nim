@@ -26,10 +26,15 @@ $ ./simple
 Sample
 --------------------------
 
-### sample-1
+### sample-1: app.nim
 
 ![sample-1](https://user-images.githubusercontent.com/11357613/197081053-4741b415-ae4f-4434-a643-da94a1777972.png)
 
+
+### sample-2: draw_image.nim
+show random images and an update loop.
+
+![sample-2](https://user-images.githubusercontent.com/11357613/199361872-6443c4d0-7b88-4dbe-8d3f-7c5c3626a871.png)
 
 
 Donations
