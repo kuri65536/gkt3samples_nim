@@ -1,4 +1,4 @@
-A sample
+Sample codes for nim and GTK 3.0
 =========================================================
 nim samples of GTK+ 3.0.
 
