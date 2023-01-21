@@ -52,6 +52,9 @@ when isMainModule:
     pixbuf: GdkPixbufPtr
     wgt: GtkWidgetPtr
 
+  counter = object of RootObj
+    n_min, n_max, n_sum, n_idx: int
+
  var th: Thread[app_data]
  var L: Lock
 
@@ -59,6 +62,27 @@ when isMainModule:
  proc render(buf: var seq[byte]): void =
     for i in 0..len(buf) - 1:
         buf[i] = byte(random.rand(255))
+
+
+ proc gettime(cur: var Timespec): int =
+    let (prev_n, prev) = (int64(cur.tv_sec), cur.tv_nsec)
+    discard clock_gettime(CLOCK_REALTIME, cur)
+    let span = (int64(cur.tv_sec) - prev_n) * 1000_000 +
+               (cur.tv_nsec - prev) div 1000
+    return int(span)
+
+
+ proc show_counter(src: var counter, msg: string, cur: int): void =
+    const init = (n_min: 0x7FFF_FFFF, n_max: 0, n_sum: 0, n_idx: 0)
+    src.n_idx += 1
+    if src.n_idx >= 100:
+        echo(msg & $(src.n_sum / src.n_idx) &
+             " (" & $src.n_min & "-" & $src.n_max & ")")
+        (src.n_min, src.n_max, src.n_sum, src.n_idx) = init
+    else:
+        src.n_min = min(src.n_min, cur)
+        src.n_max = max(src.n_max, cur)
+        src.n_sum += cur
 
 
  proc cb_timer(data: app_data): void {.thread.} =
@@ -70,19 +94,23 @@ when isMainModule:
         os.sleep(500); continue
     break
 
+   var
+     n_skip = 0
+     skips = counter(n_min: 0x7FFF_FFFF)
+     spans = counter(n_min: 0x7FFF_FFFF)
    while true:
     acquire(L)
     let idx = data.n_buf and 1
     let f = data.flags[idx]
     release(L)
+
+    n_skip += 1
     if f: continue
+    show_counter(skips, "skiped: ", n_skip)
+    n_skip = 0
 
-    let (prev_n, prev) = (int64(cur.tv_sec), cur.tv_nsec)
-    discard clock_gettime(CLOCK_REALTIME, cur)
-    let span = (int64(cur.tv_sec) - prev_n) * 1000_000 +
-               (cur.tv_nsec - prev) div 1000
-    echo("timer..." & $prev_n & "=>" & $span)
-
+    let span = gettime(cur)
+    show_counter(spans, "span: ", span)
 
     render(data.bufs[idx])
 
