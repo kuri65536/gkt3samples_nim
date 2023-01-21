@@ -43,6 +43,9 @@ when isMainModule:
  import random
  import std/locks
 
+ const (width, height) = (cint(640), cint(480))
+ const (wnd_width, wnd_height) = (cint(660), cint(500))
+
  type
   app_data = ptr app_data_obj
   app_data_obj = object of RootObj
@@ -150,7 +153,7 @@ when isMainModule:
     let bytes = newGBytes(data.bufs[idx][0].addr, cint(len(data.bufs[idx])))
     let buf = gdk_pixbuf_new_from_bytes(
               bytes, GDK_COLORSPACE_RGB, gfalse, 8,
-              100, 100, 300)
+              width, height, 3 * width)
     gdk_cairo_set_source_pixbuf(context, buf, 0, 0)
     cairo_paint(context)
 
@@ -165,7 +168,7 @@ when isMainModule:
  proc activate(app: GtkApplicationPtr, user_data: gpointer): void {.cdecl.} =
     let window = gtk_application_window_new(app)
     gtk_window_set_title(window, "Window")
-    gtk_window_set_default_size(window, 200, 200)
+    gtk_window_set_default_size(window, wnd_width, wnd_height)
     gtk_widget_show_all(window)
 
     let data = cast[app_data](user_data)
@@ -173,8 +176,8 @@ when isMainModule:
     data.wgt = window
 
     # make dummy data...
-    data.bufs[0] = newSeq[byte](100 * 100 * 3)
-    data.bufs[1] = newSeq[byte](100 * 100 * 3)
+    data.bufs[0] = newSeq[byte](3 * width * height)
+    data.bufs[1] = newSeq[byte](3 * width * height)
 
     initLock(L)
     g_signal_connect2(window, "draw", cb_draw, user_data)
