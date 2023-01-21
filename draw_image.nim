@@ -47,7 +47,7 @@ when isMainModule:
   app_data = ptr app_data_obj
   app_data_obj = object of RootObj
     n_buf: int
-    bufs: array[2, GBytes]
+    bufs: array[2, seq[byte]]
     flags: array[2, bool]
     pixbuf: GdkPixbufPtr
     wgt: GtkWidgetPtr
@@ -83,12 +83,8 @@ when isMainModule:
                (cur.tv_nsec - prev) div 1000
     echo("timer..." & $prev_n & "=>" & $span)
 
-    g_bytes_unref(data.bufs[idx])
 
-    var src = newSeq[byte](100 * 100 * 3)
-    render(src)
-    let bytes = newGBytes(src[0].addr, 100 * 100 * 3)
-    data.bufs[idx] = bytes
+    render(data.bufs[idx])
 
     acquire(L)
     data.flags[idx] = true
@@ -109,13 +105,15 @@ when isMainModule:
     if not f:
         return gfalse
 
+    let bytes = newGBytes(data.bufs[idx][0].addr, cint(len(data.bufs[idx])))
     let buf = gdk_pixbuf_new_from_bytes(
-              data.bufs[idx], GDK_COLORSPACE_RGB, gfalse, 8,
+              bytes, GDK_COLORSPACE_RGB, gfalse, 8,
               100, 100, 300)
     gdk_cairo_set_source_pixbuf(context, buf, 0, 0)
     cairo_paint(context)
 
     gdk_pixbuf_unref(buf)
+    g_bytes_unref(bytes)
     acquire(L)
     data.flags[idx] = false
     release(L)
@@ -128,15 +126,13 @@ when isMainModule:
     gtk_window_set_default_size(window, 200, 200)
     gtk_widget_show_all(window)
 
-    let wnd = gtk_widget_get_window(window)
     let data = cast[app_data](user_data)
     data.n_buf = 0
     data.wgt = window
 
     # make dummy data...
-    var src = newSeq[byte](1)
-    data.bufs[0] = newGBytes(src[0].addr, 1)
-    data.bufs[1] = newGBytes(src[0].addr, 1)
+    data.bufs[0] = newSeq[byte](100 * 100 * 3)
+    data.bufs[1] = newSeq[byte](100 * 100 * 3)
 
     initLock(L)
     g_signal_connect2(window, "draw", cb_draw, user_data)
