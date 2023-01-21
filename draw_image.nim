@@ -68,6 +68,9 @@ when isMainModule:
     if isNil(data.wgt):
         echo("count...widget is null...")
         os.sleep(500); continue
+    break
+
+   while true:
     acquire(L)
     let f = data.f_update
     release(L)
