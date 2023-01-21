@@ -72,8 +72,15 @@ when isMainModule:
 
 
  proc render(buf: var seq[byte]): void =
-    for i in 0..len(buf) - 1:
-        buf[i] = byte(random.rand(255))
+    let col1 = byte(random.rand(255))
+    let col2 = byte(random.rand(255))
+    let col3 = byte(random.rand(255))
+    var i = 0
+    while i < len(buf):
+        buf[i] = col1
+        buf[i + 1] = col2
+        buf[i + 2] = col3
+        i += 3
 
 
  proc gettime(cur: var Timespec): int =
