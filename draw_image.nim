@@ -47,8 +47,8 @@ when isMainModule:
   app_data = ptr app_data_obj
   app_data_obj = object of RootObj
     n_buf: int
-    f_update: bool
     bufs: array[2, GBytes]
+    flags: array[2, bool]
     pixbuf: GdkPixbufPtr
     wgt: GtkWidgetPtr
 
@@ -72,19 +72,17 @@ when isMainModule:
 
    while true:
     acquire(L)
-    let f = data.f_update
+    let idx = data.n_buf and 1
+    let f = data.flags[idx]
     release(L)
-    if f:
-        continue
+    if f: continue
 
-    data.n_buf += 1
     let (prev_n, prev) = (int64(cur.tv_sec), cur.tv_nsec)
     discard clock_gettime(CLOCK_REALTIME, cur)
     let span = (int64(cur.tv_sec) - prev_n) * 1000_000 +
                (cur.tv_nsec - prev) div 1000
     echo("timer..." & $prev_n & "=>" & $span)
 
-    let idx = data.n_buf and 1
     g_bytes_unref(data.bufs[idx])
 
     var src = newSeq[byte](100 * 100 * 3)
@@ -93,7 +91,8 @@ when isMainModule:
     data.bufs[idx] = bytes
 
     acquire(L)
-    data.f_update = true
+    data.flags[idx] = true
+    data.n_buf = (data.n_buf + 1) and 1
     gtk_widget_queue_draw(data.wgt)
     release(L)
 
@@ -104,12 +103,12 @@ when isMainModule:
     if isNil(data):
         return gfalse
     acquire(L)
-    let f = data.f_update
+    let idx = data.n_buf and 1
+    let f = data.flags[idx]
     release(L)
     if not f:
         return gfalse
 
-    let idx = data.n_buf and 1
     let buf = gdk_pixbuf_new_from_bytes(
               data.bufs[idx], GDK_COLORSPACE_RGB, gfalse, 8,
               100, 100, 300)
@@ -118,7 +117,7 @@ when isMainModule:
 
     gdk_pixbuf_unref(buf)
     acquire(L)
-    data.f_update = false
+    data.flags[idx] = false
     release(L)
     return gtrue
 
@@ -131,7 +130,6 @@ when isMainModule:
 
     let wnd = gtk_widget_get_window(window)
     let data = cast[app_data](user_data)
-    data.f_update = false
     data.n_buf = 0
     data.wgt = window
 
