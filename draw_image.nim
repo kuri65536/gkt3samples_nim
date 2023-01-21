@@ -52,10 +52,19 @@ when isMainModule:
     pixbuf: GdkPixbufPtr
     wgt: GtkWidgetPtr
 
+  # pattern 0: pass app_data to thread, directly.
+  # pattern 1: owner is ref object
+  th_data = ref th_data_obj
+  th_data_obj = object of RootObj
+    data_ptr: app_data
+
   counter = object of RootObj
     n_min, n_max, n_sum, n_idx: int
 
- var th: Thread[app_data]
+ when false:
+  var th: Thread[app_data]
+ else:
+  var th: Thread[th_data]
  var L: Lock
 
 
@@ -85,7 +94,12 @@ when isMainModule:
         src.n_sum += cur
 
 
- proc cb_timer(data: app_data): void {.thread.} =
+ when false:
+  proc cb_timer(data: app_data): void {.thread.} =
+    discard
+ else:
+  proc cb_timer(src: th_data): void {.thread.} =
+   let data = src.data_ptr
    var
       cur: Timespec
    while true:
@@ -170,7 +184,12 @@ when isMainModule:
   var data = app_data_obj()
   var app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE)
   g_signal_connect(app, "activate", activate, addr(data))
-  createThread(th, cb_timer, addr(data))
+
+  when false:
+    createThread(th, cb_timer, addr(data))
+  else:
+    var data_th = th_data(data_ptr: addr(data))
+    createThread(th, cb_timer, data_th)
   let status = g_application_run(app, argc, argv)
   g_object_unref (app);
   return status;
