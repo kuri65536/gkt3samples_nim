@@ -15,14 +15,11 @@ License (MPL2)::
 {.passC: gorge("pkg-config --cflags gtk+-3.0").}
 {.passL: gorge("pkg-config --libs gtk+-3.0").}
 
-import cairo
 import gtypes
 import window
 
 
 type
-  gpointer* = pointer
-
   GtkApplication* = object
   GtkApplicationPtr* = ptr GtkApplication
 
@@ -37,9 +34,6 @@ type
   callback_app* = proc(app: GtkApplicationPtr, user_data: gpointer
                       ): void {.cdecl.}
 
-  callback_draw* = proc(app: GtkWidgetPtr, context: cairo_t,
-                        user_data: gpointer): gboolean {.cdecl.}
-
 
 proc gtk_application_new*(class_string: cstring, flags: GApplicationFlags
                          ): GtkApplicationPtr {.importc: "gtk_application_new".}
@@ -48,19 +42,6 @@ proc g_object_unref*(app: GtkApplicationPtr): void {.importc.}
 
 proc g_application_run*(app: GtkApplicationPtr,
                        argc: int, argv: openarray[cstring]): int {.importc.}
-
-proc g_signal_connect*(app: GtkApplicationPtr, signal: cstring,
-                      fn: callback_app, data: gpointer,
-                      closure_notify: gpointer = nil, flags: int = 0
-                      ): void {.importc: "g_signal_connect_data".}
-
-
-proc g_signal_connect2*(wgt: GtkWidgetPtr, signal: cstring,
-                        fn: callback_draw, data: gpointer,
-                        closure_notify: gpointer = nil, flags: int = 0
-                        ): void =
-    {.emit: "g_signal_connect_data(`wgt`, `signal`, `fn`, `data`, `closure_notify`, `flags`);".}
-
 
 proc gtk_application_window_new*(app: GtkApplicationPtr
                                 ): GtkWidgetPtr {.importc.}
@@ -73,6 +54,14 @@ proc gtk_widget_get_window*(src: GtkWidgetPtr): GdkWindowPtr {.
 proc gtk_widget_show_all*(src: GtkWidgetPtr): void {.importc.}
 proc gtk_widget_queue_draw*(src: GtkWidgetPtr): void {.
                             importc: "gtk_widget_queue_draw".}
+
+
+proc g_signal_connect_activate*(app: GtkApplicationPtr,
+                                fn: callback_app, data: gpointer,
+                                closure_notify: gpointer = nil, flags: int = 0
+                                ): void =
+    {.emit: """g_signal_connect_data(`app`, "activate", `fn`, `data`,
+                                     `closure_notify`, `flags`);""".}
 
 
 when isMainModule:
@@ -88,7 +77,7 @@ when isMainModule:
 
  proc main(argc: int, argv: openarray[cstring]): int =
   var app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE)
-  g_signal_connect(app, "activate", activate, nil)
+  g_signal_connect_activate(app, activate, nil)
   let status = g_application_run(app, argc, argv)
   g_object_unref (app);
   return status;

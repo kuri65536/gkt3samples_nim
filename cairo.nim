@@ -36,6 +36,8 @@ proc gdk_cairo_set_source_pixbuf*(cr: cairo_t, pixbuf: GdkPixbufPtr,
 
 
 when isMainModule:
+  import gtypes
+
   type
     app_data = ptr app_data_obj
     app_data_obj = object of RootObj
@@ -49,7 +51,8 @@ when isMainModule:
     if isNil(data):
         return gfalse
 
-    let cr = gdk_cairo_create(data.wnd)
-    cairo_fill(cr)
-    cairo_destroy(cr)
+    when defined(build_unused):
+      let cr = gdk_cairo_create(data.wnd)
+      cairo_fill(cr)
+      cairo_destroy(cr)
 

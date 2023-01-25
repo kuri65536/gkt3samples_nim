@@ -14,6 +14,7 @@ License (MPL2)::
 ]##
 type
   gboolean* = distinct cint
+  gpointer* = pointer
 
   GBytesObj* = object of RootObj
   GBytes* = ptr GBytesObj

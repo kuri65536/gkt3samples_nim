@@ -18,7 +18,7 @@ import app
 import cairo
 import gtypes
 import pixbuf
-import window
+
 
 {.passC: gorge("pkg-config --cflags gtk+-3.0").}
 {.passL: gorge("pkg-config --libs gtk+-3.0").}
@@ -28,6 +28,9 @@ type
   gdk_colorspace_value* {.size: sizeof(cint), pure.} = enum
     GDK_COLORSPACE_RGB = 0
 
+  callback_draw* = proc(app: GtkWidgetPtr, context: cairo_t,
+                        user_data: gpointer): gboolean {.cdecl.}
+
 
 proc gdk_pixbuf_new_from_bytes*(src: GBytes,
                                 colorspace: gdk_colorspace_value,
@@ -36,6 +39,14 @@ proc gdk_pixbuf_new_from_bytes*(src: GBytes,
                                 ): GdkPixbufPtr {.
                                   importc: "gdk_pixbuf_new_from_bytes".}
 proc gdk_pixbuf_unref*(src: GdkPixbufPtr): void {.importc: "gdk_pixbuf_unref".}
+
+
+proc g_signal_connect_draw*(wgt: GtkWidgetPtr,
+                            fn: callback_draw, data: gpointer,
+                            closure_notify: gpointer = nil, flags: int = 0
+                            ): void =
+    {.emit: """g_signal_connect_data(`wgt`, "draw", `fn`, `data`,
+                                     `closure_notify`, `flags`);""".}
 
 
 when isMainModule:
@@ -187,13 +198,13 @@ when isMainModule:
     data.bufs[1] = newSeq[byte](3 * width * height)
 
     initLock(L)
-    g_signal_connect2(window, "draw", cb_draw, user_data)
+    g_signal_connect_draw(window, cb_draw, user_data)
 
 
  proc main(argc: int, argv: openarray[cstring]): int =
   var data = app_data_obj()
   var app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE)
-  g_signal_connect(app, "activate", activate, addr(data))
+  g_signal_connect_activate(app, activate, addr(data))
 
   when false:
     createThread(th, cb_timer, addr(data))

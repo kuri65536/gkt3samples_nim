@@ -6,6 +6,10 @@ bin/draw_image: draw_image.nim
 	nim c -o:$@ --threads:on $<
 
 
+bin/app: app.nim
+	nim c -o:$@ $<
+
+
 bin/timer: timer.nim
 	nim c -o:$@ $<
 

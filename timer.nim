@@ -36,9 +36,9 @@ when isMainModule:
  import os
 
 
- proc timer(user_data: gpointer): bool {.cdecl.} =
+ proc timer(user_data: gpointer): gboolean {.cdecl.} =
     echo("count...")
-    return true
+    return gtrue
 
 
  proc activate(app: GtkApplicationPtr, user_data: gpointer): void {.cdecl.} =
@@ -50,7 +50,7 @@ when isMainModule:
 
  proc main(argc: int, argv: openarray[cstring]): int =
   var app = gtk_application_new("org.gtk.example", G_APPLICATION_FLAGS_NONE)
-  g_signal_connect(app, "activate", activate, nil)
+  g_signal_connect_activate(app, activate, nil)
   g_timeout_add_full(G_PRIORITY_DEFAULT, 1000, timer, nil, nil)
   let status = g_application_run(app, argc, argv)
   g_object_unref (app);

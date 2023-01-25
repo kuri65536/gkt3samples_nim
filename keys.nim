@@ -40,7 +40,7 @@ type
                             user_data: gpointer): gboolean {.cdecl.}
 
 
-proc g_signal_connect3*(wgt: GtkWidgetPtr, signal: cstring,
+proc g_signal_connect_key*(wgt: GtkWidgetPtr, signal: cstring,
                         fn: callback_keyevents, data: gpointer,
                         closure_notify: gpointer = nil, flags: int = 0
                         ): void =
@@ -88,8 +88,8 @@ when isMainModule:
     let data = cast[app_data](user_data)
     data.wgt = window
 
-    g_signal_connect3(window, "key-press-event", cb_up, user_data)
-    g_signal_connect3(window, "key-release-event", cb_down, user_data)
+    g_signal_connect_key(window, "key-press-event", cb_up, user_data)
+    g_signal_connect_key(window, "key-release-event", cb_down, user_data)
 
 
   proc main(argc: int, argv: openarray[cstring]): void =
