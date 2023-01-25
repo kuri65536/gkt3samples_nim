@@ -37,6 +37,13 @@ show random images and an update loop.
 ![sample-2](https://user-images.githubusercontent.com/11357613/199361872-6443c4d0-7b88-4dbe-8d3f-7c5c3626a871.png)
 
 
+### sample-3: keys.nim
+get key inputs.
+
+
+---
+
+
 Donations
 ---------------------
 If you are feel to nice for this software, please donation to my

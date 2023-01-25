@@ -1,3 +1,7 @@
+bin/keys: keys.nim
+	nim c -o:$@ $<
+
+
 bin/draw_image: draw_image.nim
 	nim c -o:$@ --threads:on $<
 
